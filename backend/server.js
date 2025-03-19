@@ -85,7 +85,7 @@ app.delete("/api/documents/:documentId", async (req, res) => {
     const document = await Document.findByIdAndDelete(req.params.documentId);
     if (!document) return res.status(404).json({ error: "Document not found" });
     console.log("Deleting Document:", document); // Debugging
-    res.json({ message: "Document deleted successfully" });
+    res.json(document);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
