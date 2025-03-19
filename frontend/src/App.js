@@ -34,11 +34,13 @@ function App() {
     setError("");
 
     try {
+      const newDoc = { field1, field2 };
+
       if (editingDoc) {
-        const response = await axios.put(`http://localhost:5001/api/documents/${editingDoc._id}`, { field1, field2 });
+        const response = await axios.put(`http://localhost:5001/api/documents/${editingDoc._id}`, newDoc);
         console.log("Updating Document:", response.data); // Debugging
       } else {
-        const response = await axios.post("http://localhost:5001/api/documents", { field1, field2 });
+        const response = await axios.post("http://localhost:5001/api/documents", newDoc);
         console.log("Creating Document:", response.data); // Debugging
       }
       resetForm();

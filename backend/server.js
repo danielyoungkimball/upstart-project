@@ -31,6 +31,7 @@ const validateDocument = (req, res, next) => {
   next();
 }
 
+
 // CREATE
 app.post("/api/documents", validateDocument, async (req, res) => {
   try {
