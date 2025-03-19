@@ -14,28 +14,74 @@ mongoose.connect(process.env.MONGO_URI, {
   .then(() => console.log("MongoDB Connected"))
   .catch(err => console.error("MongoDB Connection Error:", err));
 
-
-const PostSchema = new mongoose.Schema({
-  title: String,
-  content: String,
+// Models -----------------------------------------------------
+const DocumentSchema = new mongoose.Schema({
+  field1: String,
+  field2: String,
+  field3: String,
   createdAt: { type: Date, default: Date.now },
 });
-const Post = mongoose.model("Post", PostSchema);
 
-app.post("/api/posts", async (req, res) => {
+const Document = mongoose.model("Document", DocumentSchema);
+
+// API routes ------------------------------------------------
+
+
+// CREATE
+app.post("/api/documents", async (req, res) => {
   try {
-    const post = new Post(req.body);
-    await post.save();
-    res.status(201).json(post);
+    console.log("Received Payload:", req.body); // Debugging
+    const document = new Document(req.body);
+    await document.save();
+    res.status(201).json(document);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
-app.get("/api/posts", async (req, res) => {
-  const posts = await Post.find();
-  res.json(posts);
+
+// READ ALL
+app.get("/api/documents", async (req, res) => {
+  const documents = await Document.find();
+  res.json(documents);
 });
 
-const PORT = process.env.PORT || 5000;
+
+// READ BY ID
+app.get("/api/documents/:documentId", async (req, res) => {
+  try {
+    const document = await Document.findById(req.params.documentId);
+    if (!document) return res.status(404).json({ error: "Document not found" });
+    res.json(document);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+
+// UPDATE BY ID
+app.put("/api/documents/:documentId", async (req, res) => {
+  try {
+    const document = await Document.findByIdAndUpdate(req.params.documentId, req.body, { new: true });
+    if (!document) return res.status(404).json({ error: "Document not found" });
+    res.json(document);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+
+// DELETE BY ID
+app.delete("/api/documents/:documentId", async (req, res) => {
+  try {
+    const document = await Document.findByIdAndDelete(req.params.documentId);
+    if (!document) return res.status(404).json({ error: "Document not found" });
+    res.json({ message: "Document deleted successfully" });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Server ----------------------------------------------------
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
