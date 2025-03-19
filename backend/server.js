@@ -18,7 +18,6 @@ mongoose.connect(process.env.MONGO_URI, {
 const DocumentSchema = new mongoose.Schema({
   field1: String,
   field2: String,
-  field3: String,
   createdAt: { type: Date, default: Date.now },
 });
 
@@ -26,11 +25,16 @@ const Document = mongoose.model("Document", DocumentSchema);
 
 // API routes ------------------------------------------------
 
+const validateDocument = (req, res, next) => {
+  const { field1, field2 } = req.body;
+  if (!field1 || !field2) return res.status(400).json({ error: "Both fields are required" });
+  next();
+}
 
 // CREATE
-app.post("/api/documents", async (req, res) => {
+app.post("/api/documents", validateDocument, async (req, res) => {
   try {
-    console.log("Received Payload:", req.body); // Debugging
+    console.log("Creating Comment:", req.body); // Debugging
     const document = new Document(req.body);
     await document.save();
     res.status(201).json(document);
@@ -43,6 +47,7 @@ app.post("/api/documents", async (req, res) => {
 // READ ALL
 app.get("/api/documents", async (req, res) => {
   const documents = await Document.find();
+  console.log("Receiving All Documents:", documents); // Debugging
   res.json(documents);
 });
 
@@ -52,6 +57,7 @@ app.get("/api/documents/:documentId", async (req, res) => {
   try {
     const document = await Document.findById(req.params.documentId);
     if (!document) return res.status(404).json({ error: "Document not found" });
+    console.log("Receiving Document:", document); // Debugging
     res.json(document);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -64,6 +70,7 @@ app.put("/api/documents/:documentId", async (req, res) => {
   try {
     const document = await Document.findByIdAndUpdate(req.params.documentId, req.body, { new: true });
     if (!document) return res.status(404).json({ error: "Document not found" });
+    console.log("Updating Document:", document); // Debugging
     res.json(document);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -76,6 +83,7 @@ app.delete("/api/documents/:documentId", async (req, res) => {
   try {
     const document = await Document.findByIdAndDelete(req.params.documentId);
     if (!document) return res.status(404).json({ error: "Document not found" });
+    console.log("Deleting Document:", document); // Debugging
     res.json({ message: "Document deleted successfully" });
   } catch (error) {
     res.status(400).json({ error: error.message });

@@ -6,64 +6,80 @@ function App() {
   const [documents, setDocuments] = useState([]);
   const [field1, setField1] = useState("");
   const [field2, setField2] = useState("");
-  const [field3, setField3] = useState("");
   const [editingDoc, setEditingDoc] = useState(null);
+  const [error, setError] = useState("");
 
-  // Fetch all documents on load
   useEffect(() => {
     fetchDocuments();
   }, []);
 
   const fetchDocuments = () => {
     axios.get("http://localhost:5001/api/documents")
-      .then(response => setDocuments(response.data))
+      .then(response => {
+        console.log("Receiving All Documents:", response.data); // Debugging
+        setDocuments(response.data);
+      })
       .catch(error => console.error(error));
   };
 
-  // Create or update a document
   const handleSubmit = (e) => {
     e.preventDefault();
-  
-    console.log("Submitting Document:", { field1, field2, field3 }); // Debugging
-  
+
+    if (!field1.trim() || !field2.trim()) {
+      setError("Both fields are required.");
+      return;
+    }
+
+    setError("");
+    console.log("Submitting Document:", { field1, field2 }); // Debugging
+
     if (editingDoc) {
-      axios.put(`http://localhost:5001/api/documents/${editingDoc._id}`, { field1, field2, field3 })
-        .then(() => {
+      axios.put(`http://localhost:5001/api/documents/${editingDoc._id}`, { field1, field2 })
+        .then((response) => {
+          console.log(response);
+          console.log("Document Updated:", { field1, field2 }); // Debugging
           fetchDocuments();
           resetForm();
         })
         .catch(error => console.error(error));
     } else {
-      axios.post("http://localhost:5001/api/documents", { field1, field2, field3 })
+      axios.post("http://localhost:5001/api/documents", { field1, field2 })
         .then(response => {
+          console.log("Document Created:", response.data); // Debugging
           setDocuments([...documents, response.data]);
           resetForm();
         })
         .catch(error => console.error(error));
     }
-  };  
+  };
 
   // Delete a document
   const handleDelete = (docId) => {
+    axios.get(`http://localhost:5001/api/documents/${docId}`)
+      .then(response => {
+        console.log("Deleting Document:", response.data); // Debugging
+      })
+      .catch(error => console.error(error));
+
     axios.delete(`http://localhost:5001/api/documents/${docId}`)
-      .then(() => setDocuments(documents.filter(doc => doc._id !== docId)))
+      .then(() => {
+        console.log("Document Deleted:", docId); // Debugging
+        setDocuments(documents.filter(doc => doc._id !== docId));
+      })
       .catch(error => console.error(error));
   };
 
-  // Edit a document
   const handleEdit = (doc) => {
     setEditingDoc(doc);
-    setField1(doc.field1 || "");
-    setField2(doc.field2 || ""); 
-    setField3(doc.field3 || "");
+    setField1(doc.field1);
+    setField2(doc.field2);
   };
 
-  // Reset form
   const resetForm = () => {
     setField1("");
     setField2("");
-    setField3("");
     setEditingDoc(null);
+    setError("");
   };
 
   return (
@@ -71,6 +87,7 @@ function App() {
       <button className="refresh-btn" onClick={fetchDocuments}>Refresh</button>
       <h1 className="title">Upstart Project Interview</h1>
       <form className="crud-form" onSubmit={handleSubmit}>
+        {error && <p className="error-message">{error}</p>}
         <input
           className="input"
           value={field1}
@@ -83,12 +100,6 @@ function App() {
           onChange={(e) => setField2(e.target.value)}
           placeholder="Field 2"
         />
-        <input
-          className="input"
-          value={field3}
-          onChange={(e) => setField3(e.target.value)}
-          placeholder="Field 3"
-        />
         <button className="submit-btn" type="submit">
           {editingDoc ? "Update Document" : "Create Document"}
         </button>
@@ -99,7 +110,6 @@ function App() {
           <li key={document._id} className="document">
             <p><strong>Field 1:</strong> {document.field1}</p>
             <p><strong>Field 2:</strong> {document.field2}</p>
-            <p><strong>Field 3:</strong> {document.field3}</p>
             <button className="edit-btn" onClick={() => handleEdit(document)}>Edit</button>
             <button className="delete-btn" onClick={() => handleDelete(document._id)}>Delete</button>
           </li>
