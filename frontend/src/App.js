@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import "./App.css"; // Import the CSS file
 
 function App() {
   const [posts, setPosts] = useState([]);
@@ -20,16 +21,29 @@ function App() {
   };
 
   return (
-    <div>
-      <h1>Simple Blog</h1>
-      <form onSubmit={handleSubmit}>
-        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" />
-        <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="Content"></textarea>
-        <button type="submit">Submit</button>
+    <div className="container">
+      <h1 className="title">Simple Form</h1>
+      <form className="blog-form" onSubmit={handleSubmit}>
+        <input
+          className="input"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Title"
+        />
+        <textarea
+          className="textarea"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder="Content"
+        />
+        <button className="submit-btn" type="submit">Submit</button>
       </form>
-      <ul>
+      <ul className="post-list">
         {posts.map(post => (
-          <li key={post._id}><h3>{post.title}</h3><p>{post.content}</p></li>
+          <li key={post._id} className="post">
+            <h3 className="post-title">{post.title}</h3>
+            <p className="post-content">{post.content}</p>
+          </li>
         ))}
       </ul>
     </div>
