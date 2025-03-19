@@ -13,16 +13,17 @@ function App() {
     fetchDocuments();
   }, []);
 
-  const fetchDocuments = () => {
-    axios.get("http://localhost:5001/api/documents")
-      .then(response => {
-        console.log("Receiving All Documents:", response.data); // Debugging
-        setDocuments(response.data);
-      })
-      .catch(error => console.error(error));
+  const fetchDocuments = async () => {
+    try {
+      const response = await axios.get("http://localhost:5001/api/documents");
+      console.log("Receiving All Documents:", response.data); // Debugging
+      setDocuments(response.data);
+    } catch (err) {
+      setError("Failed to fetch documents. Try again later.");
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!field1.trim() || !field2.trim()) {
@@ -31,48 +32,40 @@ function App() {
     }
 
     setError("");
-    console.log("Submitting Document:", { field1, field2 }); // Debugging
 
-    if (editingDoc) {
-      axios.put(`http://localhost:5001/api/documents/${editingDoc._id}`, { field1, field2 })
-        .then((response) => {
-          console.log(response);
-          console.log("Document Updated:", { field1, field2 }); // Debugging
-          fetchDocuments();
-          resetForm();
-        })
-        .catch(error => console.error(error));
-    } else {
-      axios.post("http://localhost:5001/api/documents", { field1, field2 })
-        .then(response => {
-          console.log("Document Created:", response.data); // Debugging
-          setDocuments([...documents, response.data]);
-          resetForm();
-        })
-        .catch(error => console.error(error));
+    try {
+      if (editingDoc) {
+        const response = await axios.put(`http://localhost:5001/api/documents/${editingDoc._id}`, { field1, field2 });
+        console.log("Updating Document:", response.data); // Debugging
+      } else {
+        const response = await axios.post("http://localhost:5001/api/documents", { field1, field2 });
+        console.log("Creating Document:", response.data); // Debugging
+      }
+      resetForm();
+    } catch (err) {
+      setError("Failed to save document. Please try again.");
+    } finally {
+      fetchDocuments();
     }
   };
 
-  // Delete a document
-  const handleDelete = (docId) => {
-    axios.get(`http://localhost:5001/api/documents/${docId}`)
-      .then(response => {
-        console.log("Deleting Document:", response.data); // Debugging
-      })
-      .catch(error => console.error(error));
-
-    axios.delete(`http://localhost:5001/api/documents/${docId}`)
-      .then(() => {
-        console.log("Document Deleted:", docId); // Debugging
-        setDocuments(documents.filter(doc => doc._id !== docId));
-      })
-      .catch(error => console.error(error));
+  const handleDelete = async (docId) => {
+    try {
+      const response = await axios.delete(`http://localhost:5001/api/documents/${docId}`);
+      console.log("Deleting Document:", response.data); // Debugging
+      setDocuments((prevDocs) => prevDocs.filter((doc) => doc._id !== docId));
+    } catch (err) {
+      setError("Failed to delete document. Please try again.");
+    } finally {
+      fetchDocuments();
+    }
   };
 
   const handleEdit = (doc) => {
     setEditingDoc(doc);
     setField1(doc.field1);
     setField2(doc.field2);
+    setError("");
   };
 
   const resetForm = () => {
@@ -106,7 +99,7 @@ function App() {
         {editingDoc && <button className="cancel-btn" onClick={resetForm}>Cancel</button>}
       </form>
       <ul className="document-list">
-        {documents.map(document => (
+        {documents.map((document) => (
           <li key={document._id} className="document">
             <p><strong>Field 1:</strong> {document.field1}</p>
             <p><strong>Field 2:</strong> {document.field2}</p>
